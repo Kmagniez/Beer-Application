@@ -39,9 +39,9 @@ class BeerList extends LitElement {
 
     constructor() {
         super();
-        this.beers = beers;
-        this.criterium = criteria[0].name;
-    }
+        this.beers = [];
+        this._getData()
+      }
 
     static get properties() {
         return {
@@ -79,7 +79,7 @@ class BeerList extends LitElement {
 
                 return beer.name && beer.name.match(new RegExp(this.filterText, 'i'));
 
-            })
+            }).length
 
     }
 
@@ -98,6 +98,16 @@ class BeerList extends LitElement {
     _descendingChange() {
         this.descendingSort = this.shadowRoot.querySelector('#descending').checked;
     }
+
+    async _getData() {
+        try {
+          const response = await fetch('/data/beers/beers.json');
+          this.beers = await response.json();
+        }
+        catch (err) {
+          console.log('fetch failed', err);
+        }
+      }
 
     render() {
         return html`
@@ -134,23 +144,27 @@ class BeerList extends LitElement {
           </div>
           </div>
           <div class="col-md-9">
-            <div class="beers">
+          <div class="beers">
             ${
-            this.beers
-                .filter((beer) => {
-                    return beer.name && beer.name.match(new RegExp(this.filterText, 'i'));
+              this.beers
+                .filter( (beer) => {
+                  return beer.name && beer.name.match(new RegExp(this.filterText, 'i'));
                 })
-                .sort((a, b) => this._beerSorter(a, b))
-                .map((beer) => {
-                    return html`
-                      <beer-list-item name="${beer.name}" description="${beer.description}">
-                      </beer-list-item>
-                    `;
+                .sort((a,b) => this._beerSorter(a,b))
+                .map( (beer) => {
+                  return html`
+                    <beer-list-item 
+                        id="${beer.id}"
+                        name="${beer.name}" 
+                        description="${beer.description}"
+                        img="${beer.img}"
+                        alcohol="${beer.alcohol}">
+                  `;
                 })
             }
-            </div>
-            <div>Number of beers in list: ${this._getCurrentBeers().length}</div>
-          </div>          
+          </div>
+          <div>Number of beers in list: ${this._getCurrentBeers()}</div>
+        </div>          
         </div>
       </div>
     `;
